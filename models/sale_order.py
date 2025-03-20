@@ -47,8 +47,7 @@ class SaleOrder(models.Model):
     # Sobreescribir campo invoice_count
     invoice_count = fields.Integer(
         string='Invoice Count',
-        compute='_compute_invoice_count_custom',
-        store=True
+        compute='_compute_invoice_count_custom'
     )
 
     @api.depends('invoice_ids', 'order_line.invoice_lines.move_id')
