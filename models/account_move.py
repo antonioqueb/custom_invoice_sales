@@ -3,7 +3,7 @@ from odoo import models, fields, api
 class AccountMove(models.Model):
     _inherit = 'account.move'
 
-    sale_order_ids = fields.Many2many('sale.order', string="Órdenes de Venta Relacionadas", readonly=True)
+    sale_order_ids = fields.Many2many('sale.order', string="Órdenes de Venta Relacionadas")
 
     @api.model
     def create(self, vals):
