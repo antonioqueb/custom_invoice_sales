@@ -7,22 +7,17 @@ class SaleOrder(models.Model):
     invoice_ids = fields.Many2many('account.move', string="Facturas Relacionadas")
 
     def action_create_invoice(self):
-        """Generar factura agrupada desde las órdenes seleccionadas."""
         orders = self.filtered(lambda o: o.invoice_status != 'invoiced')
-
         if not orders:
             raise UserError("Todas las órdenes seleccionadas ya están facturadas.")
-
         partners = orders.mapped('partner_id')
         if len(partners) > 1:
             raise UserError("Selecciona solo órdenes del mismo cliente para facturar juntas.")
-
         invoice_vals = {
             'partner_id': partners.id,
             'move_type': 'out_invoice',
             'invoice_line_ids': [],
         }
-
         for order in orders:
             for line in order.order_line:
                 invoice_vals['invoice_line_ids'].append((0, 0, {
@@ -35,7 +30,6 @@ class SaleOrder(models.Model):
                 }))
 
         invoice = self.env['account.move'].create(invoice_vals)
-
         orders.write({
             'invoice_ids': [(4, invoice.id)],
             'invoice_status': 'invoiced'
@@ -49,3 +43,19 @@ class SaleOrder(models.Model):
             'res_id': invoice.id,
             'target': 'current'
         }
+
+    # Sobreescribir campo invoice_count
+    invoice_count = fields.Integer(
+        string='Invoice Count',
+        compute='_compute_invoice_count_custom',
+        store=True
+    )
+
+    @api.depends('invoice_ids', 'order_line.invoice_lines.move_id')
+    def _compute_invoice_count_custom(self):
+        for order in self:
+            # Calcula facturas desde líneas (original) + facturas de la relación personalizada
+            invoices_from_lines = order.mapped('order_line.invoice_lines.move_id')
+            invoices_custom = order.invoice_ids
+            total_invoices = invoices_from_lines | invoices_custom  # Unión de conjuntos
+            order.invoice_count = len(total_invoices)
