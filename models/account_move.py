@@ -23,16 +23,17 @@ class AccountMove(models.Model):
     def write(self, vals):
         res = super().write(vals)
         if 'sale_order_ids' in vals:
-            # Primero, actualiza todas las órdenes relacionadas actualmente:
             for move in self:
-                # Actualiza órdenes antiguas: elimina vínculos que ya no están
-                old_orders = self.env['sale.order'].search([('invoice_ids', 'in', move.id)])
+                # Aquí la corrección clave: [move.id] en lugar de move.id
+                old_orders = self.env['sale.order'].search([('invoice_ids', 'in', [move.id])])
+
+                # Desvincular las órdenes que ya no están relacionadas
                 old_orders.filtered(lambda o: o.id not in move.sale_order_ids.ids).write({
                     'invoice_ids': [(3, move.id)],
-                    'invoice_status': 'to invoice'  # o el estado adecuado según tu lógica
+                    'invoice_status': 'to invoice'
                 })
 
-                # Actualiza órdenes nuevas: añade vínculos a nuevas órdenes seleccionadas
+                # Vincular nuevas órdenes relacionadas
                 new_orders = move.sale_order_ids
                 new_orders.write({
                     'invoice_ids': [(4, move.id)],
