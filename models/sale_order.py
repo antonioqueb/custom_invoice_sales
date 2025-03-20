@@ -4,7 +4,7 @@ from odoo.exceptions import UserError
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
-    invoice_ids = fields.Many2many('account.move', string="Facturas Relacionadas", readonly=True)
+    invoice_ids = fields.Many2many('account.move', string="Facturas Relacionadas")
 
     def action_create_invoice(self):
         """Generar factura agrupada desde las órdenes seleccionadas."""
