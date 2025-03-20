@@ -17,6 +17,7 @@ class SaleOrder(models.Model):
             'partner_id': partners.id,
             'move_type': 'out_invoice',
             'invoice_line_ids': [],
+            'sale_order_ids': [(6, 0, orders.ids)]  # Relación explícita hacia órdenes de venta
         }
         for order in orders:
             for line in order.order_line:
